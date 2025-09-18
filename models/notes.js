@@ -3,11 +3,11 @@ const Schema = mongoose.Schema;
 
 const notesSchema = new Schema({
 description: {
-    type: String,
-    required: true,
+type: String,
+required: true,
 },
 
-// date: String,
+// date: Stsring,
 });
 
 const  note = mongoose.model("note", noteSchema);

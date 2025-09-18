@@ -25,15 +25,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride("_method"));
 
 
-//view route
-app.get("/", (req, res) => {
-res.send("Hi, I am root");
-});
+
 
 //view route
-app.get("/listings", async (req, res) => {
-const allListings = await Listing.find({});
-res.render("listings/index.ejs", { allListings });
+app.get("/", async (req, res) => {
+const notes = await notes.find({});
+res.render("main.ejs", { allnotes });
 });
 
 
