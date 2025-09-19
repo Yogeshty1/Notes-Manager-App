@@ -9,12 +9,28 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Add error handling middleware
+app.use((err, req, res, next) => {
+	console.error(err.stack);
+	res.status(500).json({ message: "Something went wrong!" });
+});
+
+// Add root route handler
+app.get("/", (req, res) => {
+	res.send("Notes Manager API is running");
+});
+
 // connect lazily on first request to keep cold starts lighter
 let isConnected = false;
 async function ensureDb() {
 	if (isConnected) return;
 	const MONGO_URL = process.env.MONGO_URL || "mongodb://localhost:27017/notes-manager";
+	console.log('Attempting to connect to MongoDB...'); // Add logging
+	if (!MONGO_URL) {
+		throw new Error('MONGO_URL environment variable is not set');
+	}
 	await mongoose.connect(MONGO_URL);
+	console.log('Connected to MongoDB successfully'); // Add logging
 	isConnected = true;
 }
 
