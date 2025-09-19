@@ -9,28 +9,17 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Add error handling middleware
-app.use((err, req, res, next) => {
-	console.error(err.stack);
-	res.status(500).json({ message: "Something went wrong!" });
-});
-
-// Add root route handler
-app.get("/", (req, res) => {
-	res.send("Notes Manager API is running");
-});
-
 // connect lazily on first request to keep cold starts lighter
 let isConnected = false;
 async function ensureDb() {
 	if (isConnected) return;
 	const MONGO_URL = process.env.MONGO_URL || "mongodb://localhost:27017/notes-manager";
-	console.log('Attempting to connect to MongoDB...'); // Add logging
+	console.log('Attempting to connect to MongoDB...');
 	if (!MONGO_URL) {
 		throw new Error('MONGO_URL environment variable is not set');
 	}
 	await mongoose.connect(MONGO_URL);
-	console.log('Connected to MongoDB successfully'); // Add logging
+	console.log('Connected to MongoDB successfully');
 	isConnected = true;
 }
 
@@ -38,11 +27,14 @@ app.get("/api/test", (req, res) => res.send("Serverless API is running!"));
 
 app.get("/api/notes", async (req, res) => {
 	try {
+		console.log('GET /api/notes called');
 		await ensureDb();
 		const notes = await Note.find({}).sort({ updatedAt: -1 }).lean();
+		console.log('Found notes:', notes.length);
 		res.json(notes);
 	} catch (e) {
-		res.status(500).json({ message: "Failed to fetch notes" });
+		console.error('Error in /api/notes:', e);
+		res.status(500).json({ message: "Failed to fetch notes", error: e.message });
 	}
 });
 
@@ -59,13 +51,16 @@ app.get("/api/notes/:id", async (req, res) => {
 
 app.post("/api/notes", async (req, res) => {
 	try {
+		console.log('POST /api/notes called with:', req.body);
 		await ensureDb();
 		const { title, description } = req.body;
 		if (!title && !description) return res.status(400).json({ message: "Title or description is required" });
 		const created = await Note.create({ title: title || "", description: description || "" });
+		console.log('Created note:', created);
 		res.status(201).json(created);
 	} catch (e) {
-		res.status(500).json({ message: "Failed to create note" });
+		console.error('Error in POST /api/notes:', e);
+		res.status(500).json({ message: "Failed to create note", error: e.message });
 	}
 });
 
@@ -91,19 +86,6 @@ app.delete("/api/notes/:id", async (req, res) => {
 		res.status(400).json({ message: "Failed to delete note" });
 	}
 });
-
-// Add this after your other route definitions
-app.get("/health", (req, res) => {
-  res.status(200).json({ status: "ok" });
-});
-
-// Add this at the bottom of the file
-if (require.main === module) {
-  const PORT = process.env.PORT || 3001;
-  app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-  });
-}
 
 module.exports = app;
 
