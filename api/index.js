@@ -92,6 +92,19 @@ app.delete("/api/notes/:id", async (req, res) => {
 	}
 });
 
+// Add this after your other route definitions
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "ok" });
+});
+
+// Add this at the bottom of the file
+if (require.main === module) {
+  const PORT = process.env.PORT || 3001;
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
+}
+
 module.exports = app;
 
 

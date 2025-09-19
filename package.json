@@ -1,5 +1,5 @@
 {
-  "name": "notes-manager-app",
+  "name": "notes-manager",
   "version": "1.0.0",
   "description": "Notes managing App",
   "homepage": "https://github.com/Yogeshty1/Notes-Manager-App#readme",
@@ -13,11 +13,11 @@
   "license": "ISC",
   "author": "Yogesh",
   "type": "commonjs",
-  "main": "index.js",
+  "main": "api/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node backend/index.js",
-    "dev": "concurrently \"npm:server\" \"npm:client\"",
+    "start": "node api/index.js",
+    "dev": "nodemon api/index.js",
     "server": "nodemon backend/index.js",
     "client": "npm --prefix client run start",
     "build": "npm --prefix client run build"
@@ -35,5 +35,8 @@
   },
   "devDependencies": {
     "concurrently": "^9.0.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   }
 }
