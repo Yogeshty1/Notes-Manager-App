@@ -98,22 +98,48 @@ app.post("/api/notes", async (req, res) => {
 
 app.put("/api/notes/:id", async (req, res) => {
 	try {
+		console.log('PUT /api/notes called with:', req.params.id, req.body);
 		await ensureDb();
 		const { title, description } = req.body;
-		const updated = await Note.findByIdAndUpdate(req.params.id, { $set: { title, description } }, { new: true, runValidators: true }).lean();
+		
+		// Validate input
+		if (title === undefined && description === undefined) {
+			return res.status(400).json({ message: "Title or description is required" });
+		}
+		
+		const updated = await Note.findByIdAndUpdate(
+			req.params.id, 
+			{ $set: { title: title || "", description: description || "" } }, 
+			{ new: true, runValidators: true }
+		).lean();
+		
 		if (!updated) return res.status(404).json({ message: "Note not found" });
+		console.log('Updated note:', updated);
 		res.json(updated);
 	} catch (e) {
-		res.status(400).json({ message: "Failed to update note" });
+		console.error('Error in PUT /api/notes:', e);
+		res.status(500).json({ message: "Failed to update note", error: e.message });
 	}
 });
 
 app.delete("/api/notes/:id", async (req, res) => {
 	try {
+		console.log('DELETE /api/notes called with:', req.params.id);
 		await ensureDb();
+		
+		// Validate ID format
+		if (!req.params.id || req.params.id.length < 10) {
+			return res.status(400).json({ message: "Invalid note ID" });
+		}
+		
 		const deleted = await Note.findByIdAndDelete(req.params.id).lean();
-		if (!deleted) return res.status(404).json({ message: "Note not found" });
-		res.status(200).json({ message: "Note deleted successfully" });
+		if (!deleted) {
+			console.log('Note not found for deletion:', req.params.id);
+			return res.status(404).json({ message: "Note not found" });
+		}
+		
+		console.log('Deleted note:', deleted);
+		res.status(200).json({ message: "Note deleted successfully", deletedId: req.params.id });
 	} catch (e) {
 		console.error('Error in DELETE /api/notes:', e);
 		res.status(500).json({ message: "Failed to delete note", error: e.message });

@@ -13,29 +13,26 @@ export default function Composer({ onCreated }) {
   async function submit() {
     if (!canSubmit) return;
     
-    // Optimistic update - show note immediately
-    const tempNote = {
-      _id: Date.now().toString(),
-      title,
-      description: text,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    onCreated(tempNote);
+    // Store the form data before clearing
+    const noteData = { title, description: text };
     
     // Clear form immediately
     setTitle('');
     setText('');
     setExpanded(false);
     
-    // Save to server in background
+    // Save to server
     try {
-      const created = await api.createNote({ title, description: text });
-      // Update with real data from server
+      const created = await api.createNote(noteData);
+      // Only call onCreated once with the real data from server
       onCreated(created);
     } catch (error) {
       console.error('Failed to save note:', error);
-      // Could show error message here
+      // Restore form data on error
+      setTitle(noteData.title);
+      setText(noteData.description);
+      setExpanded(true);
+      alert('Failed to save note. Please try again.');
     }
   }
 
