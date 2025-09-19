@@ -20,7 +20,7 @@ const Note = mongoose.models.Note || mongoose.model("Note", notesSchema);
 let isConnected = false;
 async function ensureDb() {
 	if (isConnected) return;
-	const MONGO_URL = "mongodb+srv://Yogesh:dbpassword@cluster0.z3kn00g.mongodb.net/notes-manager?retryWrites=true&w=majority&appName=Cluster0";
+	const MONGO_URL = process.env.MONGO_URL || "mongodb+srv://Yogesh:dbpassword@cluster0.z3kn00g.mongodb.net/notes-manager?retryWrites=true&w=majority&appName=Cluster0";
 	console.log('MONGO_URL exists:', !!MONGO_URL);
 	console.log('Using MONGO_URL:', MONGO_URL);
 	try {
@@ -38,7 +38,12 @@ async function ensureDb() {
 	}
 }
 
-app.get("/api/test", (req, res) => res.json({ message: "Serverless API is running!", timestamp: new Date().toISOString() }));
+app.get("/api/test", (req, res) => res.json({ 
+	message: "Serverless API is running!", 
+	timestamp: new Date().toISOString(),
+	environment: process.env.NODE_ENV || 'development',
+	mongoUrl: process.env.MONGO_URL ? 'configured' : 'not configured'
+}));
 
 app.get("/api/health", (req, res) => {
 	res.json({
