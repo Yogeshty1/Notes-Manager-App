@@ -25,10 +25,3 @@
 	]
 }
 
-const API_BASE_URL = "/api";
-
-export const fetchNotes = async () => {
-    const response = await fetch(`${API_BASE_URL}/notes`);
-    return response.json();
-};
-
