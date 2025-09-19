@@ -1,0 +1,32 @@
+{
+	"name": "notes-manager-backend",
+	"version": "1.0.0",
+	"description": "Notes Manager Backend API for Vercel deployment",
+	"main": "api/index.js",
+	"scripts": {
+		"start": "node api/index.js",
+		"dev": "nodemon api/index.js",
+		"test": "echo \"No tests specified\" && exit 0"
+	},
+	"dependencies": {
+		"express": "^4.18.2",
+		"mongoose": "^8.0.3",
+		"cors": "^2.8.5"
+	},
+	"devDependencies": {
+		"nodemon": "^3.0.2"
+	},
+	"engines": {
+		"node": ">=18.0.0"
+	},
+	"keywords": [
+		"notes",
+		"api",
+		"express",
+		"mongodb",
+		"vercel",
+		"serverless"
+	],
+	"author": "Notes Manager Team",
+	"license": "MIT"
+}
