@@ -12,11 +12,31 @@ export default function Composer({ onCreated }) {
 
   async function submit() {
     if (!canSubmit) return;
-    const created = await api.createNote({ title, description: text });
-    onCreated(created);
+    
+    // Optimistic update - show note immediately
+    const tempNote = {
+      _id: Date.now().toString(),
+      title,
+      description: text,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    onCreated(tempNote);
+    
+    // Clear form immediately
     setTitle('');
     setText('');
     setExpanded(false);
+    
+    // Save to server in background
+    try {
+      const created = await api.createNote({ title, description: text });
+      // Update with real data from server
+      onCreated(created);
+    } catch (error) {
+      console.error('Failed to save note:', error);
+      // Could show error message here
+    }
   }
 
   // if we click outside the box, it will minimize

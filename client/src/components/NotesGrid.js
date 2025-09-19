@@ -9,9 +9,20 @@ import NoteEditor from './NoteEditor';
 export default function NotesGrid() {
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    api.listNotes().then((data) => { setNotes(data); setLoading(false); });
+    api.listNotes()
+      .then((data) => { 
+        setNotes(data); 
+        setLoading(false); 
+        setError(null);
+      })
+      .catch((err) => {
+        console.error('Failed to load notes:', err);
+        setError('Failed to load notes');
+        setLoading(false);
+      });
   }, []);
 
   function onCreated(n) {
@@ -23,8 +34,13 @@ export default function NotesGrid() {
   }
 
   async function onDelete(id) {
-    await api.deleteNote(id);
-    setNotes((prev) => prev.filter((n) => n._id !== id));
+    try {
+      await api.deleteNote(id);
+      setNotes((prev) => prev.filter((n) => n._id !== id));
+    } catch (err) {
+      console.error('Failed to delete note:', err);
+      alert('Failed to delete note. Please try again.');
+    }
   }
 
   const [openNote, setOpenNote] = useState(null);
@@ -40,6 +56,8 @@ export default function NotesGrid() {
       <Composer onCreated={onCreated} />
       {loading ? (
         <div className="empty">Loading...</div>
+      ) : error ? (
+        <div className="empty" style={{color: '#ff6b6b'}}>{error}</div>
       ) : notes.length === 0 ? (
         <div className="empty">No notes yet</div>
       ) : (

@@ -20,13 +20,15 @@ const Note = mongoose.models.Note || mongoose.model("Note", notesSchema);
 let isConnected = false;
 async function ensureDb() {
 	if (isConnected) return;
-	const MONGO_URL = process.env.MONGO_URL || "mongodb+srv://Yogesh:dbpassword@cluster0.z3kn00g.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+	const MONGO_URL = process.env.MONGO_URL || "mongodb+srv://Yogesh:dbpassword@cluster0.z3kn00g.mongodb.net/notes-manager?retryWrites=true&w=majority&appName=Cluster0";
 	console.log('MONGO_URL exists:', !!MONGO_URL);
 	console.log('Using MONGO_URL:', MONGO_URL);
 	try {
 		await mongoose.connect(MONGO_URL, {
-			serverSelectionTimeoutMS: 5000,
-			socketTimeoutMS: 45000
+			serverSelectionTimeoutMS: 3000,
+			socketTimeoutMS: 20000,
+			maxPoolSize: 10,
+			serverApi: { version: '1', strict: true, deprecationErrors: true }
 		});
 		console.log('Connected to MongoDB successfully');
 		isConnected = true;
@@ -111,9 +113,10 @@ app.delete("/api/notes/:id", async (req, res) => {
 		await ensureDb();
 		const deleted = await Note.findByIdAndDelete(req.params.id).lean();
 		if (!deleted) return res.status(404).json({ message: "Note not found" });
-		res.status(204).send();
+		res.status(200).json({ message: "Note deleted successfully" });
 	} catch (e) {
-		res.status(400).json({ message: "Failed to delete note" });
+		console.error('Error in DELETE /api/notes:', e);
+		res.status(500).json({ message: "Failed to delete note", error: e.message });
 	}
 });
 
