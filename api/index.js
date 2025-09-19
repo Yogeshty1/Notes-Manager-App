@@ -48,6 +48,21 @@ app.get("/api/health", (req, res) => {
 	});
 });
 
+// Test endpoint to create a sample note
+app.post("/api/test-note", async (req, res) => {
+	try {
+		await ensureDb();
+		const testNote = await Note.create({ 
+			title: "Test Note", 
+			description: "This is a test note created at " + new Date().toISOString() 
+		});
+		res.json(testNote);
+	} catch (e) {
+		console.error('Error creating test note:', e);
+		res.status(500).json({ message: "Failed to create test note", error: e.message });
+	}
+});
+
 app.get("/api/notes", async (req, res) => {
 	try {
 		console.log('GET /api/notes called');
@@ -84,15 +99,8 @@ app.post("/api/notes", async (req, res) => {
 		res.status(201).json(created);
 	} catch (e) {
 		console.error('Error in POST /api/notes:', e);
-		// For now, return a mock response to prevent 500 errors
-		const mockNote = {
-			_id: Date.now().toString(),
-			title: req.body.title || "",
-			description: req.body.description || "",
-			createdAt: new Date().toISOString(),
-			updatedAt: new Date().toISOString()
-		};
-		res.status(201).json(mockNote);
+		// Return error instead of mock to help debug
+		res.status(500).json({ message: "Failed to create note", error: e.message });
 	}
 });
 

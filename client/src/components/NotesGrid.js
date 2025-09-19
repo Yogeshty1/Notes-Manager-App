@@ -34,19 +34,24 @@ export default function NotesGrid() {
   }
 
   async function onDelete(id) {
+    console.log('Attempting to delete note with ID:', id);
+    
+    // Find the note to restore if needed
+    const noteToRestore = notes.find(n => n._id === id);
+    console.log('Note to delete:', noteToRestore);
+    
     // Optimistic delete - remove from UI immediately
     setNotes((prev) => prev.filter((n) => n._id !== id));
     
     try {
       await api.deleteNote(id);
-      // Success - note already removed from UI
+      console.log('Successfully deleted note:', id);
     } catch (err) {
       console.error('Failed to delete note:', err);
       // Restore note to UI on failure
-      setNotes((prev) => {
-        const noteToRestore = notes.find(n => n._id === id);
-        return noteToRestore ? [noteToRestore, ...prev] : prev;
-      });
+      if (noteToRestore) {
+        setNotes((prev) => [noteToRestore, ...prev]);
+      }
       alert('Failed to delete note. Please try again.');
     }
   }
@@ -54,8 +59,10 @@ export default function NotesGrid() {
   const [openNote, setOpenNote] = useState(null);
 
   async function saveModal(updated) {
+    console.log('Attempting to update note:', updated);
     try {
       const saved = await api.updateNote(updated._id, { title: updated.title, description: updated.description });
+      console.log('Successfully updated note:', saved);
       onEdit(saved);
       setOpenNote(null);
     } catch (err) {
