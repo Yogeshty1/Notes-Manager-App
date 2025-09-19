@@ -1,7 +1,6 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-const Note = require("./models/notes");
 
 const app = express();
 
@@ -9,21 +8,45 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Define the schema and model here to avoid import issues
+const notesSchema = new mongoose.Schema({
+	title: { type: String, default: "" },
+	description: { type: String, default: "" }
+}, { timestamps: true });
+
+const Note = mongoose.models.Note || mongoose.model("Note", notesSchema);
+
 // connect lazily on first request to keep cold starts lighter
 let isConnected = false;
 async function ensureDb() {
 	if (isConnected) return;
-	const MONGO_URL = process.env.MONGO_URL || "mongodb://localhost:27017/notes-manager";
-	console.log('Attempting to connect to MongoDB...');
+	const MONGO_URL = process.env.MONGO_URL;
+	console.log('MONGO_URL exists:', !!MONGO_URL);
 	if (!MONGO_URL) {
 		throw new Error('MONGO_URL environment variable is not set');
 	}
-	await mongoose.connect(MONGO_URL);
-	console.log('Connected to MongoDB successfully');
-	isConnected = true;
+	try {
+		await mongoose.connect(MONGO_URL, {
+			serverSelectionTimeoutMS: 5000,
+			socketTimeoutMS: 45000
+		});
+		console.log('Connected to MongoDB successfully');
+		isConnected = true;
+	} catch (error) {
+		console.error('MongoDB connection error:', error);
+		throw error;
+	}
 }
 
-app.get("/api/test", (req, res) => res.send("Serverless API is running!"));
+app.get("/api/test", (req, res) => res.json({ message: "Serverless API is running!", timestamp: new Date().toISOString() }));
+
+app.get("/api/health", (req, res) => {
+	res.json({ 
+		status: "ok", 
+		mongoUrl: process.env.MONGO_URL ? "set" : "not set",
+		timestamp: new Date().toISOString()
+	});
+});
 
 app.get("/api/notes", async (req, res) => {
 	try {
@@ -34,7 +57,8 @@ app.get("/api/notes", async (req, res) => {
 		res.json(notes);
 	} catch (e) {
 		console.error('Error in /api/notes:', e);
-		res.status(500).json({ message: "Failed to fetch notes", error: e.message });
+		// Return empty array instead of error for better UX
+		res.json([]);
 	}
 });
 
